@@ -1,0 +1,32 @@
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from logging_service import LoggingService
+from flask import Flask, request
+
+
+app = Flask(__name__)
+logging_service = LoggingService()
+
+
+@app.route('/log', methods=['POST'])
+def log_message():
+    try:
+        data = request.json
+        return logging_service.log_message(data)
+    except Exception as e:
+        return logging_service.handle_error(f'Error handling get message request: {e}') 
+
+
+@app.route('/msgs', methods=['GET'])
+def get_messages():
+    try:
+        return logging_service.get_message_values()
+    except Exception as e:
+        return logging_service.handle_error(f'Error handling get message request: {e}')
+    
+
+if __name__ == '__main__':
+    app.run(port=5001)
