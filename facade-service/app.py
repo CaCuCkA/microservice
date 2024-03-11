@@ -7,14 +7,14 @@ from flask import Flask, request
 from facade_service import FacadeService
 
 app = Flask(__name__)
-facade_service = FacadeService()
+facade_service = FacadeService(app)
 
 
 @app.route('/msg', methods=['POST'])
 def post_message():
     try:
         data = request.json
-        return facade_service.send_message(data)
+        return facade_service.send_message(data, app)
     except Exception as e:
         print(str(e))
         return facade_service.handle_error(f'Error handling get message request: {e}') 
@@ -30,7 +30,7 @@ def get_msgs():
 
 def main():
     assert len(sys.argv) > 1, "Unfortunatly, I don`t get any port number"
-    app.run(host='0.0.0.0', port=int(sys.argv[-1]))
+    app.run(host='0.0.0.0', port=int(sys.argv[-1]), debug=True)
 
 
 if __name__ == '__main__':

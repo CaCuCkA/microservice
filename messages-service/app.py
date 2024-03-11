@@ -8,7 +8,7 @@ from messages_service import MessageService
 
 
 app = Flask(__name__)
-message_service = MessageService()
+message_service = MessageService(app)
 
 
 @app.route('/msg', methods=['GET'])
@@ -21,7 +21,7 @@ def get_message():
 
 def main():
     assert len(sys.argv) > 1, "Unfortunatly, I don`t get any port number"
-    app.run(host='0.0.0.0', port=int(sys.argv[-1]))
+    app.run(host='0.0.0.0', port=int(sys.argv[-1]), debug=True)
 
 
 if __name__ == '__main__':

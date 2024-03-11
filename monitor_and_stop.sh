@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 
 stop_corresponding_hazelcast_node() {
   local service_name=$1

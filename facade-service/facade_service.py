@@ -5,8 +5,8 @@ from base.base_service import BaseService
 
 
 class FacadeService(BaseService):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, app):
+        super().__init__(app)
         self.__messages_service_url = 'http://messages_service:5005'
         self.__logging_service_urls = ['http://logging_service_1:5001', 'http://logging_service_2:5002', 'http://logging_service_3:5003']
 
@@ -59,9 +59,10 @@ class FacadeService(BaseService):
             raise e
         
 
-    def send_message(self, data):
+    def send_message(self, data, app):
         uuid = self.__generate_uuid()
         url = self.__generate_url('logging', '/log')
+        app.logger.info(f"URL: {url}, Message: {data.get('msg')}")
 
         try:
             response = requests.post(url, json={'id': uuid, 'msg': data.get('msg')})

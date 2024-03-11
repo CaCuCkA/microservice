@@ -4,8 +4,8 @@ from base.base_service import BaseService
 
 
 class LoggingService(BaseService):
-    def __init__(self):
-        super().__init__()        
+    def __init__(self, app):
+        super().__init__(app)        
         self.__client =  LoggingService.__setup_client()
         self.__messages_log = self.__client.get_map("messages").blocking()
     
@@ -33,4 +33,3 @@ class LoggingService(BaseService):
     def get_message_values(self):
         messages = self.__messages_log.values()
         return self._generate_output(msgs=' '.join(messages) if messages else '')
-

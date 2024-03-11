@@ -2,8 +2,8 @@ from base.base_service import BaseService
 
 
 class MessageService(BaseService):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, app):
+        super().__init__(app)
     
 
     def get_message(self):
