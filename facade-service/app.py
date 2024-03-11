@@ -28,5 +28,10 @@ def get_msgs():
         return  facade_service.handle_error(f'Error handling get message request: {e}') 
 
 
+def main():
+    assert len(sys.argv) > 1, "Unfortunatly, I don`t get any port number"
+    app.run(host='0.0.0.0', port=int(sys.argv[-1]))
+
+
 if __name__ == '__main__':
-    app.run(port=5000)
+    main()

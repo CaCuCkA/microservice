@@ -1,14 +1,14 @@
 import uuid
+import random
 import requests
-from flask import jsonify
 from base.base_service import BaseService
 
 
 class FacadeService(BaseService):
     def __init__(self):
         super().__init__()
-        self.__logging_service_url = 'http://localhost:5001'
-        self.__messages_service_url = 'http://localhost:5002'
+        self.__messages_service_url = 'http://messages_service:5005'
+        self.__logging_service_urls = ['http://logging_service_1:5001', 'http://logging_service_2:5002', 'http://logging_service_3:5003']
 
 
     @staticmethod    
@@ -21,9 +21,18 @@ class FacadeService(BaseService):
         return messages + "\n" + message    
     
 
+    def __choose_logging_service_url(self) -> str:
+        return random.choice(self.__logging_service_urls)
+    
 
-    def __generate_url(self, service_type: str, response: str):
-        return (self.__logging_service_url if service_type == 'logging' else self.__messages_service_url) + response
+    def __generate_url(self, service_type: str, endpoint: str) -> str:
+        if service_type == 'logging':
+            url = self.__choose_logging_service_url()
+            return f"{url}{endpoint}"
+        elif service_type == 'message':
+            return f"{self.__messages_service_url}{endpoint}"
+        else:
+            raise ValueError("Invalid service type")
 
 
     def __get_messages(self) -> str:
