@@ -1,0 +1,136 @@
+version: '3.8'
+
+# Common properties for Hazlecast node
+x-hazelcast-common: &hazelcast-common
+  image: hazelcast/hazelcast:latest
+  networks:
+    - system-network
+
+services:
+  facade_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: facade-service
+      args:
+        - PORT=5004
+    ports:
+      - "5004:5004"
+    container_name: facade_service
+    networks:
+      - system-network
+
+  messages_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: messages-service
+      args:
+        - PORT=5005
+    ports:
+      - "5005:5005"
+    container_name: messages_service
+    networks:
+      - system-network
+
+  hazelcast-node-1:
+    <<: *hazelcast-common
+    container_name: hazelcast-node1
+    ports:
+      - "5701:5701"
+    environment:
+      HZ_CLUSTERNAME: hazelcast-homework2
+      HZ_NETWORK_PUBLICADDRESS: 172.17.0.1:5701
+
+  hazelcast-node-2:
+    <<: *hazelcast-common
+    container_name: hazelcast-node2
+    ports:
+      - "5702:5701"
+    environment:
+      HZ_CLUSTERNAME: hazelcast-homework2
+      HZ_NETWORK_PUBLICADDRESS: 172.17.0.1:5702
+
+  hazelcast-node-3:
+    <<: *hazelcast-common
+    container_name: hazelcast-node3
+    ports:
+      - "5703:5701"
+    environment:
+      HZ_CLUSTERNAME: hazelcast-homework2
+      HZ_NETWORK_PUBLICADDRESS: 172.17.0.1:5703
+
+  management-center:
+    image: hazelcast/management-center:latest
+    container_name: hazelcast-management-center
+    ports:
+      - "8081:8080"
+    networks:
+      - system-network
+    environment:
+      MC_DEFAULT_CLUSTER: hazelcast-homework2
+      MC_DEFAULT_CLUSTER_MEMBERS: hazelcast-node1:5701,hazelcast-node2:5702,hazelcast-node3:5703
+
+  monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile.monitor
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock 
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+  
+  logging_service_1:
+    build:
+      context: .
+      dockerfile: Dockerfile  
+      target: logging-service
+      args:
+        - PORT=5001
+    ports:
+      - "5001:5001"
+    container_name: logging_service_1
+    networks:
+      - system-network
+    depends_on:
+      - hazelcast-node-1
+      - hazelcast-node-2
+      - hazelcast-node-3
+
+  logging_service_2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: logging-service
+      args:
+        - PORT=5002
+    ports:
+      - "5002:5002"
+    container_name: logging_service_2
+    networks:
+      - system-network
+    depends_on:
+      - hazelcast-node-1
+      - hazelcast-node-2
+      - hazelcast-node-3
+
+  logging_service_3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: logging-service
+      args:
+        - PORT=5003
+    ports:
+      - "5003:5003"
+    container_name: logging_service_3
+    networks:
+      - system-network
+    depends_on:
+      - hazelcast-node-1
+      - hazelcast-node-2
+      - hazelcast-node-3
+
+networks:
+  system-network:
+    driver: bridge
