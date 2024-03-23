@@ -1,9 +1,11 @@
-from base.base_service import BaseService
-
+from base import BaseService
+from base import client
 
 class MessageService(BaseService):
     def __init__(self, app):
         super().__init__(app)
+        self.__messages = []
+        self.__comunication_queue = client.get_queue("messages-queue").blocking()
     
 
     def get_message(self):

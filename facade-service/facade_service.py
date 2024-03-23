@@ -1,8 +1,7 @@
 import uuid
 import random
 import requests
-from base.base_service import BaseService
-
+from base import BaseService
 
 class FacadeService(BaseService):
     def __init__(self, app):
