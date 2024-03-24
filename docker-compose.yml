@@ -20,19 +20,6 @@ services:
     networks:
       - system-network
 
-  messages_service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: messages-service
-      args:
-        - PORT=5005
-    ports:
-      - "5005:5005"
-    container_name: messages_service
-    networks:
-      - system-network
-
   hazelcast-node-1:
     <<: *hazelcast-common
     container_name: hazelcast-node1
@@ -130,6 +117,32 @@ services:
       - hazelcast-node-1
       - hazelcast-node-2
       - hazelcast-node-3
+
+  messages_service_1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: messages-service
+      args:
+        - PORT=5005
+    ports:
+      - "5005:5005"
+    container_name: messages_service_1
+    networks:
+      - system-network
+
+  messages_service_2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: messages-service
+      args:
+        - PORT=5006
+    ports:
+      - "5006:5006"
+    container_name: messages_service_2
+    networks:
+      - system-network
 
 networks:
   system-network:

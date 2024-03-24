@@ -1,12 +1,23 @@
-from base import BaseService
-from base import client
+import logging
+import threading
+from base import client, BaseService
 
 class MessageService(BaseService):
     def __init__(self, app):
         super().__init__(app)
         self.__messages = []
-        self.__comunication_queue = client.get_queue("messages-queue").blocking()
-    
+        self.__communication_queue = client.get_queue("messages-queue").blocking()
+        threading.Thread(target=self.poll_queue, daemon=True).start()
 
-    def get_message(self):
-        return self._generate_output(msg='This is a static message from messages-service.')
+
+    def poll_queue(self):
+        while True:
+            message = self.__communication_queue.take()
+            logging.info(f"Get message from queue: {message}")
+            self.__messages.append(message)
+                
+
+    def get_messages(self):
+        msgs = ", ".join(str(msg) for msg in self.__messages)
+        self._app.logger.info(self.__messages)
+        return self._generate_output(msgs=msgs)
