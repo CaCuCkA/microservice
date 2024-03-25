@@ -1,5 +1,6 @@
 import uuid
 import random
+import typing
 import logging
 import requests
 from base import client
@@ -7,11 +8,9 @@ from base import BaseService
 
 
 class FacadeService(BaseService):
-    def __init__(self, app):
-        super().__init__(app)
-        self.__comunication_queue = client.get_queue("messages-queue").blocking()
-        self.__messages_service_urls = ['http://messages_service_1:5005', 'http://messages_service_2:5006']
-        self.__logging_service_urls = ['http://logging_service_1:5001', 'http://logging_service_2:5002', 'http://logging_service_3:5003']
+    def __init__(self, app, port: int):
+        super().__init__(app, BaseService._camel_to_snake(__class__.__name__), port)
+        self.__communication_queue = client.get_queue(self._consul_client.kv.get("queue_name")[1]['Value'].decode('utf-8')).blocking()
 
 
     @staticmethod    
@@ -23,28 +22,26 @@ class FacadeService(BaseService):
     def __concat_resonses(messages: str, message: str) -> str:
         return messages + "\n" + message    
     
+    
+    def __get_services_ip(self, service_name: str) -> typing.List[str]:
+        services = self._consul_client.agent.services()
+        logging.info(f"Services: {services}")
+        return [service_info['Address'] for _, service_info in services.items() if service_info['Service'] == service_name]
+            
 
-    def __choose_logging_service_url(self) -> str:
-        return random.choice(self.__logging_service_urls)
+    def __choose_service_url(self, service_name: str) -> str:
+        res = self.__get_services_ip(service_name)
+        self._app.logger.info(res)
+        return random.choice(res)
     
 
-    def __choose_message_service_url(self) -> str:
-        return random.choice(self.__messages_service_urls)
-    
-
-    def __generate_url(self, service_type: str, endpoint: str) -> str:
-        if service_type == 'logging':
-            url = self.__choose_logging_service_url()
-        elif service_type == 'message':
-            url = self.__choose_message_service_url()
-        else:
-            raise ValueError("Invalid service type")
-
+    def __generate_url(self, service_name: str, endpoint: str) -> str:
+        url = self.__choose_service_url(service_name)
         return f"{url}{endpoint}"
 
 
     def __get_logging_messages(self) -> str:
-        url = self.__generate_url('logging', '/msgs')
+        url = self.__generate_url('logging_service', '/msgs')
         try:
             response = requests.get(url)
             response.raise_for_status()
@@ -56,7 +53,7 @@ class FacadeService(BaseService):
 
 
     def __get_messages(self) -> str:
-        url = self.__generate_url('message', '/msgs')
+        url = self.__generate_url('messages_service', '/msgs')
         try:
             response = requests.get(url)
             response.raise_for_status()
@@ -67,12 +64,12 @@ class FacadeService(BaseService):
             raise e
         
 
-    def send_message(self, data, app):
+    def send_message(self, data):
         uuid = self.__generate_uuid()
-        url = self.__generate_url('logging', '/log')
-     
+        url = self.__generate_url('logging_service', '/log')
+       
         try:
-            self.__comunication_queue.put(data.get('msg'))
+            self.__communication_queue.put(data.get('msg'))
             response = requests.post(url, json={'id': uuid, 'msg': data.get('msg')})
             response.raise_for_status()
             return response.json(), 200

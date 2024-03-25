@@ -1,3 +1,4 @@
 Flask
 requests
 hazelcast-python-client
+python-consul

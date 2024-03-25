@@ -6,7 +6,24 @@ x-hazelcast-common: &hazelcast-common
   networks:
     - system-network
 
+
 services:
+  consul:
+    image: consul:1.15.4
+    container_name: consul
+    ports:
+      - "8500:8500"
+    volumes:
+    - ./scripts:/scripts
+    command: >
+      /bin/sh -c "
+      chmod +x /scripts/init_consul.sh &&
+      /scripts/init_consul.sh &
+      consul agent -dev -client 0.0.0.0 -ui
+      "
+    networks:
+      - system-network
+
   facade_service:
     build:
       context: .
@@ -19,6 +36,8 @@ services:
     container_name: facade_service
     networks:
       - system-network
+    depends_on:
+      - consul
 
   hazelcast-node-1:
     <<: *hazelcast-common
@@ -74,15 +93,18 @@ services:
       target: logging-service
       args:
         - PORT=5001
+        - ID=1
     ports:
       - "5001:5001"
     container_name: logging_service_1
     networks:
       - system-network
     depends_on:
+      - consul
       - hazelcast-node-1
       - hazelcast-node-2
       - hazelcast-node-3
+    
 
   logging_service_2:
     build:
@@ -91,12 +113,14 @@ services:
       target: logging-service
       args:
         - PORT=5002
+        - ID=2
     ports:
       - "5002:5002"
     container_name: logging_service_2
     networks:
       - system-network
     depends_on:
+      - consul
       - hazelcast-node-1
       - hazelcast-node-2
       - hazelcast-node-3
@@ -108,12 +132,14 @@ services:
       target: logging-service
       args:
         - PORT=5003
+        - ID=3
     ports:
       - "5003:5003"
     container_name: logging_service_3
     networks:
       - system-network
     depends_on:
+      - consul
       - hazelcast-node-1
       - hazelcast-node-2
       - hazelcast-node-3
@@ -125,11 +151,14 @@ services:
       target: messages-service
       args:
         - PORT=5005
+        - ID=1
     ports:
       - "5005:5005"
     container_name: messages_service_1
     networks:
       - system-network
+    depends_on:
+      - consul
 
   messages_service_2:
     build:
@@ -138,11 +167,14 @@ services:
       target: messages-service
       args:
         - PORT=5006
+        - ID=2
     ports:
       - "5006:5006"
     container_name: messages_service_2
     networks:
       - system-network
+    depends_on:
+      - consul
 
 networks:
   system-network:

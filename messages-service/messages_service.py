@@ -2,11 +2,11 @@ import logging
 import threading
 from base import client, BaseService
 
-class MessageService(BaseService):
-    def __init__(self, app):
-        super().__init__(app)
+class MessagesService(BaseService):
+    def __init__(self, app, port: int, id: int):
         self.__messages = []
-        self.__communication_queue = client.get_queue("messages-queue").blocking()
+        super().__init__(app, BaseService._camel_to_snake(__class__.__name__, id), port)
+        self.__communication_queue = client.get_queue(self._consul_client.kv.get("queue_name")[1]['Value'].decode('utf-8')).blocking()
         threading.Thread(target=self.poll_queue, daemon=True).start()
 
 

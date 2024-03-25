@@ -3,12 +3,18 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from base import BaseService
+from flask import Flask, request, jsonify
 from logging_service import LoggingService
-from flask import Flask, request
-
 
 app = Flask(__name__)
-logging_service = LoggingService(app)
+logging_service = None
+BaseService.setup_logging()
+
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy"}), 200
 
 
 @app.route('/log', methods=['POST'])
@@ -29,8 +35,11 @@ def get_messages():
 
 
 def main():
-    assert len(sys.argv) > 1, "Unfortunatly, I don`t get any port number"
-    app.run(host='0.0.0.0', port=int(sys.argv[-1]), debug=True)
+    global logging_service
+    assert len(sys.argv) > 2, "Unfortunatly, I don`t get any port number"
+    _, port, id = sys.argv
+    logging_service = LoggingService(app, int(port), int(id))
+    app.run(host='0.0.0.0', port=int(port), debug=True)
 
 
 if __name__ == '__main__':

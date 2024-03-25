@@ -4,9 +4,9 @@ from base import BaseService
 
 
 class LoggingService(BaseService):
-    def __init__(self, app):
-        super().__init__(app)        
-        self.__messages_log = client.get_map("messages-map").blocking() 
+    def __init__(self, app, port: int, id: int):
+        super().__init__(app, BaseService._camel_to_snake(__class__.__name__,  id), port)        
+        self.__messages_log = client.get_map(self._consul_client.kv.get("map_name")[1]['Value'].decode('utf-8')).blocking() 
 
 
     def log_message(self, data) -> dict:
